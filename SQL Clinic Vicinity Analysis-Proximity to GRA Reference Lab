@@ -1,0 +1,49 @@
+--Purpose of this Query: 
+--Identify clinics submitting a high volume of clinical pathology samples within proximity to the Grafton Reference Lab, ensuring sample viability upon arrival.
+
+--Query Objective:
+--To retrieve and analyze laboratory results for pets (canines and felines) within 60 miles of Grafton, MA, focusing on recent tests performed in clinical pathology.
+
+SELECT 
+    rde."Customer Code",
+    rde."Panel Code",
+    rde."Panel Name",
+    TO_CHAR(rde."Result Release Date", 'YYYY-MM') AS "Month",
+    COUNT(DISTINCT rde."Accession Id") AS "Number of Accessions",
+    3959 * 2 * ATAN2(SQRT(POWER(SIN(RADIANS(cust_addr."Latitude" - 42.2070391) / 2), 2) + COS(RADIANS(cust_addr."Latitude")) * COS(RADIANS(42.2070391)) 
+    * POWER(SIN(RADIANS(cust_addr."Longitude" - -71.6856236) / 2), 2)), 
+     SQRT(1 - POWER(SIN(RADIANS(cust_addr."Latitude" - 42.2070391) / 2), 2) - COS(RADIANS(cust_addr."Latitude"))
+    * COS(RADIANS(42.2070391)) * POWER(SIN(RADIANS(cust_addr."Longitude" - -71.6856236) / 2), 2))) AS "Distance to Grafton, MA (mi)"
+FROM 
+    "VIEWS"."RDE_RESULTS"."RDE Results" rde
+JOIN 
+    "VIEWS"."CUSTOMER_DATA"."Customer Address" cust_addr
+    ON rde."SAP Customer Number" = cust_addr."Customer Number"
+LEFT OUTER JOIN 
+    "VIEWS"."RDE_RESULTS"."Gold Service" gs 
+    ON rde."Context Id" = gs."Service Context Id" 
+        AND gs."Service Type Code" = 'TEST'
+        AND rde."Assay Code" = gs."Service Code"
+        AND rde."Lab Department" = gs."Service Category Name"
+WHERE 
+    rde."Result Remark CLOB" IS NOT NULL
+    AND rde."Result Release Date" >= dateadd(day, -100, current_date())
+    AND rde."Performing Lab Code" IN ('GRA') 
+    AND rde."Species Code" IN ('CANINE', 'FELINE')
+    AND rde."Lab Department" LIKE '%CLINICAL PATHOLOGY%'
+    AND 3959 * 2 * ATAN2(SQRT(POWER(SIN(RADIANS(cust_addr."Latitude" - 42.2070391) / 2), 2) + COS(RADIANS(cust_addr."Latitude")) 
+    * COS(RADIANS(42.2070391)) * POWER(SIN(RADIANS(cust_addr."Longitude" - -71.6856236) / 2), 2)), 
+    SQRT(1 - POWER(SIN(RADIANS(cust_addr."Latitude" - 42.2070391) / 2), 2) - COS(RADIANS(cust_addr."Latitude"))
+    * COS(RADIANS(42.2070391)) * POWER(SIN(RADIANS(cust_addr."Longitude" - -71.6856236) / 2), 2))) <= 60
+GROUP BY 
+    rde."Customer Code",
+    rde."Panel Code",
+    rde."Panel Name",
+    TO_CHAR(rde."Result Release Date", 'YYYY-MM'),
+    "Distance to Grafton, MA (mi)"
+ORDER BY 
+    rde."Customer Code",
+    rde."Panel Code",
+    rde."Panel Name",
+    TO_CHAR(rde."Result Release Date", 'YYYY-MM')
+;
