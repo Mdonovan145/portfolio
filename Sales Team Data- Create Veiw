@@ -1,0 +1,82 @@
+--SQL Query Summary for Advanced Data Analysis
+---------------------------------------
+---------------------------------------
+--Create Combined Query View
+--Purpose: Integrates data from tbl_opp, tbl_brand, tbl_customer, tbl_product, and tbl_sales_rep into a single view for comprehensive analysis.
+CREATE VIEW CombinedView_two AS
+SELECT 
+    *
+FROM 
+       tbl_opp
+JOIN 
+     tbl_brand ON tbl_opp.BRAND_ID = tbl_brand.brand_id
+JOIN 
+    tbl_customer ON tbl_opp.CUS_ID = tbl_customer.CUS_ID
+JOIN 
+    tbl_product ON tbl_opp.MATERIAL_NUM = tbl_product.material_num
+JOIN 
+    tbl_sales_rep ON tbl_opp.EMP_ID = tbl_sales_rep.EMP_ID;
+    
+--------------------------------------------------------------
+--2021 opportunity Sum for North America-West region, by sales representative.
+--Purpose: Calculates the total opportunity amount for 2021 by each sales representative in the North America-West region, including parts of the United States and Canada.
+SELECT 
+    tbl_sales_rep.EMP_ID,
+    tbl_sales_rep.NAME,
+    SUM(tbl_opp.OPPORTUNITY_AMOUNT) AS "2021 Opportunity Amount"
+FROM 
+    tbl_sales_rep
+JOIN 
+    tbl_opp ON tbl_sales_rep.EMP_ID = tbl_opp.EMP_ID
+WHERE 
+    ((tbl_sales_rep.sales_country= 'United States' AND tbl_sales_rep.SALES_REGION IN ('west', 'northwest', 'southwest'))
+    OR 
+    (tbl_sales_rep.sales_country = 'Canada' AND tbl_sales_rep.SALES_REGION IN ('west', 'northwest', 'southwest')))
+    AND 
+    strftime('%Y', tbl_opp.OPPORTUNITY_CREATED) = '2021'
+GROUP BY 
+    tbl_sales_rep.EMP_ID, tbl_sales_rep.NAME;
+    
+    
+--------------------------------------------------------------
+--Lost opportunities by reason, showing counts by year
+--Purpose: Calculates the total opportunity amount for 2021 by each sales representative in the North America-West region, including parts of the United States and Canada.
+
+SELECT 
+    tbl_opp.OPPORTUNITY_RESULT_REASON,
+    SUM(CASE WHEN strftime('%Y', tbl_opp.OPPORTUNITY_CLOSED) = '2020' THEN 1 ELSE 0 END) AS "2020",
+    SUM(CASE WHEN strftime('%Y', tbl_opp.OPPORTUNITY_CLOSED) = '2021' THEN 1 ELSE 0 END) AS "2021",
+    SUM(CASE WHEN strftime('%Y', tbl_opp.OPPORTUNITY_CLOSED) = '2022' THEN 1 ELSE 0 END) AS "2022",
+    SUM(CASE WHEN strftime('%Y', tbl_opp.OPPORTUNITY_CLOSED) = '2023' THEN 1 ELSE 0 END) AS "2023"
+FROM 
+    tbl_opp
+WHERE 
+  tbl_opp.stage_of_sale='Loss'
+        
+GROUP BY 
+    tbl_opp.OPPORTUNITY_RESULT_REASON;
+
+-------------------------------------------------
+--Aggregates the total OPPORTUNITY_AMOUNT for each OPPORTUNITY_NAME and STAGE_OF_SALE for each year from 2020 to 2023, calculates the average opportunity
+--Purpose: Aggregates total opportunity amounts by name and stage of sale for each year from 2020 to 2023, and calculates the average opportunity amount over these years.
+WITH YearlyAmounts AS (
+    SELECT
+        OPPORTUNITY_NAME,
+        STAGE_OF_SALE,
+        SUM(CASE WHEN STRFTIME('%Y', OPPORTUNITY_CREATED) = '2020' THEN OPPORTUNITY_AMOUNT ELSE 0 END) AS "2020",
+        SUM(CASE WHEN STRFTIME('%Y', OPPORTUNITY_CREATED) = '2021' THEN OPPORTUNITY_AMOUNT ELSE 0 END) AS "2021",
+        SUM(CASE WHEN STRFTIME('%Y', OPPORTUNITY_CREATED) = '2022' THEN OPPORTUNITY_AMOUNT ELSE 0 END) AS "2022",
+        SUM(CASE WHEN STRFTIME('%Y', OPPORTUNITY_CREATED) = '2023' THEN OPPORTUNITY_AMOUNT ELSE 0 END) AS "2023"
+    FROM tbl_opp
+    GROUP BY OPPORTUNITY_NAME, STAGE_OF_SALE
+)
+SELECT
+    OPPORTUNITY_NAME,
+    STAGE_OF_SALE,
+    "2020",
+    "2021",
+    "2022",
+    "2023",
+    ( "2020" + "2021" + "2022" + "2023" ) / 4.0 AS "Average_OPPORTUNITY_AMOUNT"
+FROM YearlyAmounts;
+---------------------------------------------------------------

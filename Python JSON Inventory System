@@ -1,0 +1,47 @@
+# Program Description:
+# Inventory System that loads JSON data and allows user to order parts.
+# Checks order against stock and stores order information in a dictionary
+# User input is required to input parts order.
+#
+# Read in Supplier JSON Data and Convert to Dictionary
+import json
+
+supplier_data = '{"parts": ["sprocket", "gizmo", "widget", "dodad"], ' \
+                '"sprocket": {"price": 3.99, "quantity": 32}, ' \
+                '"gizmo": {"price": 7.98, "quantity": 2}, ' \
+                '"widget": {"price": 14.32, "quantity": 4},' \
+                ' "dodad": {"price": 0.5, "quantity": 0}}'
+
+dictparts = json.loads(supplier_data)
+
+order = {}
+grand_total = 0
+
+print("Welcome to the parts ordering system. Parts available for order:")
+print(dictparts['parts'])
+
+while True:
+    part = input("Enter the name of the part you want to order (or type 'quit' to exit): ")
+    if part == 'quit':
+        break
+    elif part not in dictparts['parts']:
+        print("Sorry, we don't have that part in stock.")
+        continue
+
+    quantity = int(input("Enter the quantity you want to order: "))
+    if quantity > dictparts[part]['quantity']:
+        print(f"Sorry, we only have {dictparts[part]['quantity']} {part}s in stock.")
+        continue
+
+    order[part] = quantity
+    dictparts[part]['quantity'] -= quantity
+    price_per_part = dictparts[part]['price']
+    order_total = price_per_part * quantity
+    grand_total += order_total
+    print(f"You have ordered {quantity} {part}s at a price of {price_per_part:.2f} per part. Order total: {order_total:.2f}")
+
+print("Thank you for your order!")
+print("Order details:")
+print(order)
+print(f"Grand total: {grand_total:.2f}")
+

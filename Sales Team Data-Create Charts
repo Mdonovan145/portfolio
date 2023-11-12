@@ -1,0 +1,61 @@
+#Python Script for Data Analysis and Visualization in Veterinary Sales
+
+#Library Imports:
+#Importing sqlite3, pandas, and matplotlib.pyplot for database connection, data manipulation, and visualization.
+import sqlite3
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Connect to the SQLite database
+conn = sqlite3.connect('VetSoftDB.db')  # Replace 'your_database.db' with the actual database file path
+
+# Define your combined SQL query
+query = """
+WITH RankedData AS (
+  SELECT
+    c.PRACTICE_NAME,
+    STRFTIME('%Y', o.OPPORTUNITY_CREATED) AS Year,
+    STRFTIME('%m', o.OPPORTUNITY_CREATED) AS Month,
+    SUM(o.OPPORTUNITY_AMOUNT) AS TotalOpportunityAmount,
+    RANK() OVER(PARTITION BY STRFTIME('%Y', o.OPPORTUNITY_CREATED) ORDER BY SUM(o.OPPORTUNITY_AMOUNT) DESC) AS Rank
+  FROM 
+    tbl_customer c
+  JOIN 
+    tbl_opp o ON c.CUS_ID = o.CUS_ID
+  JOIN
+    tbl_sales_rep s ON o.EMP_ID = s.EMP_ID
+  WHERE
+    (s.sales_country = 'United States' AND s.SALES_REGION IN ('west', 'northwest', 'southwest'))
+  GROUP BY 
+    c.PRACTICE_NAME, Year, Month
+)
+SELECT 
+  PRACTICE_NAME, Year, Month, TotalOpportunityAmount
+FROM 
+  RankedData
+WHERE 
+  Rank <= 4
+ORDER BY 
+  Year, Rank;
+"""
+
+# Execute the SQL query and load the result into a DataFrame
+df = pd.read_sql_query(query, conn)
+
+# Close the database connection
+conn.close()
+
+# Create the pivot table
+pivot_df = df.pivot_table(index=['Year', 'Month'], columns='PRACTICE_NAME', values='TotalOpportunityAmount', aggfunc='sum')
+
+# Plot the pivot table as a stacked bar chart
+pivot_df.plot(kind='bar', stacked=True, figsize=(12, 8))
+
+#Displaying the Chart:
+#Renders the visualization with appropriate labels and a descriptive title.
+plt.ylabel('Total Opportunity Amount')
+plt.xlabel('Year, Month')
+plt.title('Top 4 Monthly Opportunity Amounts by Year in U.S. Western Sales Regions')
+plt.xticks(rotation=75)
+plt.grid(axis='y')
+plt.show()
