@@ -1,0 +1,72 @@
+--SQL Query Overview for Database Analysis
+---------------------------------------
+---------------------------------------
+
+--Preview the First 10 Rows
+--Purpose: Display the first 10 rows from each specified table for a quick data overview.
+SELECT * FROM tbl_brand LIMIT 10;
+
+SELECT * FROM tbl_customer LIMIT 10;
+
+SELECT * FROM tbl_product LIMIT 10;
+
+SELECT * FROM tbl_sales_rep LIMIT 10;
+
+SELECT * FROM tbl_opp LIMIT 10;
+--------------------------------------------------------------
+
+---Obtain All Column Names and Data Types
+--Purpose: Retrieve and list all column names and data types from each table.
+SELECT 'tbl_brand' AS table_name, name AS column_name, type AS column_type FROM PRAGMA_table_info('tbl_brand')
+UNION ALL
+SELECT 'tbl_customer' AS table_name, name AS column_name, type AS column_type FROM PRAGMA_table_info('tbl_customer')
+UNION ALL
+SELECT 'tbl_opp' AS table_name, name AS column_name, type AS column_type FROM PRAGMA_table_info('tbl_opp')
+UNION ALL
+SELECT 'tbl_product' AS table_name, name AS column_name, type AS column_type FROM PRAGMA_table_info('tbl_product')
+UNION ALL
+SELECT 'tbl_sales_rep' AS table_name, name AS column_name, type AS column_type FROM PRAGMA_table_info('tbl_sales_rep');
+
+--------------------------------------------------------------
+
+---Identifying Common Fields
+--Purpose: Determine columns that are common across multiple tables, highlighting potential relational links.
+WITH ColumnInfo AS (
+    SELECT 'tbl_brand' AS table_name, name AS column_name FROM PRAGMA_table_info('tbl_brand')
+    UNION ALL
+    SELECT 'tbl_customer' AS table_name, name AS column_name FROM PRAGMA_table_info('tbl_customer')
+    UNION ALL
+    SELECT 'tbl_opp' AS table_name, name AS column_name FROM PRAGMA_table_info('tbl_opp')
+    UNION ALL
+    SELECT 'tbl_product' AS table_name, name AS column_name FROM PRAGMA_table_info('tbl_product')
+    UNION ALL
+    SELECT 'tbl_sales_rep' AS table_name, name AS column_name FROM PRAGMA_table_info('tbl_sales_rep')
+)
+SELECT 
+    column_name,
+    GROUP_CONCAT(table_name, ' | ') AS table_names
+FROM 
+    ColumnInfo
+GROUP BY 
+    column_name
+HAVING 
+    COUNT(DISTINCT table_name) > 1;
+    
+   --------------------------------------------------------------
+
+  ---Identifying primary and foreign keys in the tables.
+  --   Purpose: Inspect the primary and foreign key relationships in each table to understand data integrity and relational structure.
+PRAGMA foreign_key_list('tbl_brand');
+PRAGMA table_info('tbl_brand');
+
+PRAGMA foreign_key_list('tbl_customer');
+PRAGMA table_info('tbl_customer');
+
+PRAGMA foreign_key_list('tbl_opp');
+PRAGMA table_info('tbl_opp');
+
+PRAGMA foreign_key_list('tbl_product');
+PRAGMA table_info('tbl_product');
+
+PRAGMA foreign_key_list('tbl_sales_rep');
+PRAGMA table_info('tbl_sales_rep');
