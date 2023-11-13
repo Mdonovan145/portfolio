@@ -1,0 +1,74 @@
+/* ------------------------------------------------------------------------------------
+
+Objective: Program will allow the user to make some simple banking transations. 
+Then, display the closing balance with a message.
+------------------------------------------------------------------------------------ */
+#include <stdio.h>
+#define MAX 50
+/*Function Prototypes*/
+void print_withdrawls();
+void print_deposits();
+void display_bank_record (float starting_balance, float amount_to_deposit[], int
+number_of_deposits, float amount_to_withdraw[], int number_of_withdrawals, float
+current_balance);
+/* Variable Declarations */
+/* --------------------- */
+int number_of_deposits, number_of_withdrawals, i;
+float amount_to_deposit[MAX], amount_to_withdraw[MAX];
+float starting_balance, current_balance;
+char c;
+void print_withdrawls (void)
+{
+do
+{
+printf ("\nEnter the number of withdrawals: ");
+scanf ("%i", &number_of_withdrawals);
+while ( (c = getchar() != '\n') && c != EOF);
+if (number_of_withdrawals > MAX)
+printf ("Error: Number of withdrawals must be at most %i, please reenter.\
+n",MAX);
+else if (number_of_withdrawals < 0)
+printf ("Error: Number of withdrawals must be at least zero, please re-enter.\n");
+} while (number_of_withdrawals > MAX || number_of_withdrawals < 0);
+}
+void print_deposits (void)
+{
+do
+{
+printf ("\nEnter the number of deposits: ");
+scanf ("%i", &number_of_deposits);
+while ( (c = getchar() != '\n') && c != EOF);
+if (number_of_deposits > MAX)
+printf ("Error: Number of deposits must be at most %i, please reenter.\
+n", MAX);
+if (number_of_deposits < 0)
+printf ("Error: Number of deposits must be at least zero, please reenter.\
+n");
+} while ( number_of_deposits >MAX || number_of_deposits < 0);
+}
+void display_bank_record (float starting_balance, float amount_to_deposit [ ],
+int number_of_deposits, float amount_to_withdraw [ ], int number_of_withdrawals,
+float current_balance)
+{
+printf ("\n\n"); /* spacing */
+printf (" *** Banking Summary ***\n\n");
+printf ("Starting Balance: $%13.2f\n\n", starting_balance);
+{
+for (i = 0; i < number_of_deposits; i++ )
+printf ("Deposit #%2i: %15.2f\n", i+1, amount_to_deposit[i]);
+if (number_of_deposits > 0)
+printf ("\n"); /* spacing */
+for (i = 0; i < number_of_withdrawals; ++i )
+printf ("Withdrawal #%2i: %15.2f\n", i+1, amount_to_withdraw[i]);
+printf ("\nEnding Balance: $%15.2f\n\n", current_balance);
+}
+getchar();
+}
+int main (void)
+{
+/* Display an introduction header */
+/* ------------------------------ */
+
+
+printf ("Welcome the Computer Banking System\n\n");
+/* Query the user for the starting balance (starting_balance >= 0) */
