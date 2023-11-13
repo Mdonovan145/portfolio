@@ -1,5 +1,4 @@
 
-#Python Data Profiling Code Snippet Overview
 #This Python script leverages the pandas and ydata_profiling libraries to profile data from a CSV file. 
 #Here's a breakdown of its key components:
 #
