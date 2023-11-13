@@ -1,0 +1,128 @@
+ ---------------------------------------------------
+ ---SQL Austin Animal Center Data Cleaning Project 
+ --------------------------------------------------- 
+--This Database Consists of two different tables 
+--Intakes_AustinAnimalCenter  
+--Outcomes_AustinAnimalCenter
+
+ --------------------    
+ --- Basic Data Exploration
+SELECT * FROM Intakes_AustinAnimalCenter LIMIT 10;
+
+SELECT * FROM Outcomes_AustinAnimalCenter LIMIT 10;
+
+SELECT COUNT(*) FROM Intakes_AustinAnimalCenter;
+SELECT COUNT(*) FROM Outcomes_AustinAnimalCenter;  
+
+--Table Structure 
+ PRAGMA table_info(Intakes_AustinAnimalCenter);
+ PRAGMA table_info(Outcomes_AustinAnimalCenter);
+ 
+ --Identify Unique Values 
+ SELECT DISTINCT Animal_ID FROM Intakes_AustinAnimalCenter;
+ SELECT DISTINCT Animal_ID FROM Outcomes_AustinAnimalCenter;  
+ 
+SELECT Animal_ID, COUNT(*) FROM Intakes_AustinAnimalCenter GROUP BY Animal_ID;
+SELECT Animal_ID, COUNT(*) FROM Outcomes_AustinAnimalCenter GROUP BY Animal_ID;
+ 
+--Identifying Duplicates
+ SELECT Animal_ID, COUNT(*) FROM Intakes_AustinAnimalCenter GROUP BY Animal_ID HAVING COUNT(*) > 1;
+ SELECT Animal_ID, COUNT(*) FROM Outcomes_AustinAnimalCenter GROUP BY Animal_ID HAVING COUNT(*) > 1;
+ 
+ --Remove Non-Text Charcters from Name Column
+UPDATE Intakes_AustinAnimalCenter
+SET Name = REGEXP_REPLACE(Name, '[^a-zA-Z]', '');
+ 
+UPDATE Outcomes_AustinAnimalCenter
+SET Name = REGEXP_REPLACE(Name, '[^a-zA-Z]', '');
+
+ 
+ --- Create Combined Data Table for Cleaning
+CREATE TABLE IntakeswithOutcomes_AustinAnimalCenter (
+    Animal_ID VARCHAR(255),
+    Name VARCHAR(255),
+    DateTime DATETIME,
+    MonthYear VARCHAR(255),
+    Found_Location VARCHAR(255),
+    Intake_Type VARCHAR(255),
+    Intake_Condition VARCHAR(255),
+    Animal_Type VARCHAR(255),
+    Sex_upon_Intake VARCHAR(255),
+    Age_upon_Intake VARCHAR(255),
+    Breed VARCHAR(255),
+    Color VARCHAR(255),
+    Outcome_Type VARCHAR(255),
+    Outcome_Subtype VARCHAR(255)
+);
+
+--Populate the New Combined Table with Data From Intakes and Outcomes
+INSERT INTO IntakeswithOutcomes_AustinAnimalCenter
+SELECT 
+    i.Animal_ID,
+    i.Name,
+    i.DateTime,
+    i.MonthYear,
+    i.Found_Location,
+    i.Intake_Type,
+    i.Intake_Condition,
+    i.Animal_Type,
+    i.Sex_upon_Intake,
+    i.Age_upon_Intake,
+    i.Breed,
+    i.Color,
+    o.Outcome_Type,
+    o.Outcome_Subtype
+FROM 
+    Intakes_AustinAnimalCenter AS i
+LEFT JOIN 
+    Outcomes_AustinAnimalCenter AS o 
+ON 
+    i.Animal_ID = o.Animal_ID AND 
+    i.Name = o.Name AND 
+    i.Breed = o.Breed AND 
+    i.Animal_Type = o.Animal_Type;
+  
+--Confirm Data Populated in Combined Table;
+SELECT * FROM IntakeswithOutcomes_AustinAnimalCenter LIMIT 10;
+ 
+--Combined Table Structure 
+ PRAGMA table_info(IntakeswithOutcomes_AustinAnimalCenter);
+ 
+
+--Create Found Location Columns;
+ALTER TABLE IntakeswithOutcomes_AustinAnimalCenter
+ADD COLUMN FoundLocation_Details TEXT;
+
+ALTER TABLE IntakeswithOutcomes_AustinAnimalCenter
+ADD COLUMN FoundLocation_City TEXT;
+
+ALTER TABLE IntakeswithOutcomes_AustinAnimalCenter
+ADD COLUMN FoundLocation_State TEXT;
+
+--Format & Poulate FoundLocation_Details
+UPDATE IntakeswithOutcomes_AustinAnimalCenter
+SET FoundLocation_Details = REPLACE(REPLACE(FoundLocation, '(', ''), ')', '');
+
+--Populate FoundLocation_City
+UPDATE IntakeswithOutcomes_AustinAnimalCenter
+SET FoundLocation_City = 
+    TRIM(
+        SUBSTR(
+            FoundLocation, 
+            INSTR(FoundLocation, ' in ') + 4, 
+            INSTR(FoundLocation, ' (TX)') - INSTR(FoundLocation, ' in ') - 4
+        )
+    )
+WHERE FoundLocation LIKE '% in % (TX)%';
+
+--Populate FoundLocation_State
+UPDATE IntakeswithOutcomes_AustinAnimalCenter
+SET FoundLocation_State = CASE
+    WHEN FoundLocation LIKE '%(TX)%' THEN 'TX'
+    ELSE FoundLocation_State
+END;
+ 
+
+
+
+                                           
