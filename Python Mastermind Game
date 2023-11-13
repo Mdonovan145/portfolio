@@ -1,0 +1,75 @@
+
+# Program Description:
+# User input is required to enter the colors and attempt to guess the sequence.
+#
+legal_colors = ['R', 'G', 'B', 'Y', 'W', 'O', 'M', 'V']
+
+
+def generate_color_sequence():
+    import random
+    random.seed()
+
+    sequence = random.sample(range(len(legal_colors)), 4)
+    return [legal_colors[i] for i in sequence]
+
+
+colors = generate_color_sequence()
+
+# Print Welcome Message and Explain Rules to User.
+print("Welcome to the Mastermind Game\t"
+      "\nGame Rules:\n"
+      "1.Guess which 4 of the 8 colored pegs have been chosen by the randomizer\n"
+      "2.The available colors are Red, Blue, Green, Yellow, Violet, Orange, White, Magenta.\n"
+      "3.Each guess will be submitted  by entering just the 1st character of the color (case does not matter).\n"
+      "4.The computer will output an underscore for no peg, R for a red peg, and W for a white peg.\n"
+      "5.The user has 5 guesses to try and guess the combination. After 5 guesses, they lose.\n"
+      "6.Peg Colors cannot be repeated and guesses should be entered without spaces.\n"
+      "Good Luck!\n"
+      )
+
+# Set the number of chances the user has to guess
+chances = 5
+
+# Start the game loop
+while chances > 0:
+    # Get user input
+    guess = input(
+        f"Please enter your guess with no spaces between colors. Colors cannot be repeated. Guess {6 - chances}: ")
+    guess = list(guess.upper())
+
+    # Check if the guess is valid
+    if len(guess) != 4 or not all(color in legal_colors for color in guess):
+        print(
+            "Invalid input. Please enter 4 colors without spaces and without repeating colors (Possible colors are R, G, B, Y, W, O, M, V)")
+        continue
+
+    # Check if the guess is correct
+    if guess == colors:
+        print(f"Congratulations, you guessed the secret code in {6 - chances} guesses!")
+        break
+
+    # Calculate the number of correct colors in the guess
+    correct_colors = sum(1 for color in guess if color in colors)
+
+    # Calculate the number of correct colors in the correct position
+    correct_positions = sum(1 for i in range(4) if guess[i] == colors[i])
+
+    # Print feedback
+    feedback = ['_'] * 4
+    for i in range(4):
+        if guess[i] == colors[i]:
+            feedback[i] = 'R'
+        elif guess[i] in colors:
+            feedback[i] = 'W'
+    print("Feedback:", ' '.join(feedback))
+
+    # Update the number of chances the user has and print the remaining chances
+    chances -= 1
+    print(f"Possible Colors Are R,G,B,Y,W,O,M,V\n"
+          "Enter without spaces and without repeats\n"
+          f"Guesses remaining: {chances}\n")
+
+# If the user didn't guess the correct answer after 5 chances, print the correct answer
+if chances == 0:
+    print("Sorry, you didn't guess the correct sequence in 5 chances. The correct sequence was:", ' '.join(colors))
+
